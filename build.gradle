@@ -1,0 +1,67 @@
+plugins {
+    id 'java-library'
+    id 'org.springframework.boot' version '4.0.6'
+    id 'io.spring.dependency-management' version '1.1.7'
+    id 'nu.studer.jooq' version '9.0'
+}
+
+group = 'org.example'
+java.sourceCompatibility = JavaVersion.VERSION_21
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation libs.jakarta.persistence.jakarta.persistence.api
+    implementation libs.jakarta.validation.jakarta.validation.api
+
+    implementation libs.org.springframework.boot.spring.boot.starter.web
+    implementation libs.org.springframework.boot.spring.boot.starter.security
+    implementation libs.org.springframework.boot.spring.boot.starter.thymeleaf
+    implementation libs.org.springframework.boot.spring.boot.starter.jooq
+
+    implementation libs.io.jsonwebtoken.jjwt.api
+    runtimeOnly libs.io.jsonwebtoken.jjwt.impl
+    runtimeOnly libs.io.jsonwebtoken.jjwt.jackson
+
+    implementation libs.org.postgresql.postgresql
+    jooqGenerator libs.org.postgresql.postgresql
+
+}
+
+jooq {
+    version = dependencyManagement.importedProperties['jooq.version']
+    configurations {
+        main {
+            generateSchemaSourceOnCompilation = true
+            generationTool {
+                logging = org.jooq.meta.jaxb.Logging.WARN
+                jdbc {
+                    driver = 'org.postgresql.Driver'
+                    url = dbUrl
+                    user = dbUser
+                    password = dbPassword
+                }
+                generator {
+                    name = 'org.jooq.codegen.DefaultGenerator'
+                    database {
+                        inputSchema = 'public'
+                        includes = '.*'
+                    }
+                    generate {
+                        records = true
+                    }
+                    target {
+                        packageName = 'org.jooq'
+                        directory = 'build/generated-src/jooq'
+                    }
+                }
+            }
+        }
+    }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+}
