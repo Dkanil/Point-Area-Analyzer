@@ -2,7 +2,6 @@ package org.example.lab4.service;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 
@@ -39,18 +38,19 @@ public class JwtCore {
     }
 
     private <T> T extractClaim(String token, Function<Claims, T> claimsResolvers) {
-        final Claims claims = Jwts.parserBuilder()
-                .setSigningKey(getSigningKey())
+        final Claims claims = Jwts.parser()
+                .verifyWith((javax.crypto.SecretKey) getSigningKey())
                 .build()
-                .parseClaimsJws(token).getBody();
+                .parseSignedClaims(token).getPayload();
         return claimsResolvers.apply(claims);
     }
 
     public String generateToken(UserDetails userDetails) {
-        return Jwts.builder().setSubject((Objects.requireNonNull(userDetails).getUsername()))
-                .setIssuedAt(new Date())
-                .setExpiration(new Date((new Date()).getTime() + expiration))
-                .signWith(getSigningKey(), SignatureAlgorithm.HS256)
+        return Jwts.builder().
+                subject((Objects.requireNonNull(userDetails).getUsername()))
+                .issuedAt(new Date())
+                .expiration(new Date((new Date()).getTime() + expiration))
+                .signWith(getSigningKey())
                 .compact();
     }
 

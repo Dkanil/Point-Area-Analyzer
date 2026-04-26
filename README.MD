@@ -20,7 +20,8 @@ Full-Stack веб-приложение для анализа попадания 
 ## Как запустить? 
 
 ### Через Docker
-todo
+- ```docker-compose up --build```
+- Сервис будет доступен по адресу http://localhost:4200/
 
 ### Локально
 **Требования:** JDK 21, Node.js, PostgreSQL.
@@ -37,4 +38,5 @@ cd frontend
 npm install
 ng serve
 ```
+
 Сервис будет доступен по адресу http://localhost:4200/
