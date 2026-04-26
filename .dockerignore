@@ -1,7 +1,0 @@
-.gradle
-.idea
-build
-frontend
-.gitignore
-*.png
-*.md
