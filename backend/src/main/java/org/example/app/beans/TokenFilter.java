@@ -1,12 +1,12 @@
-package org.example.lab4.beans;
+package org.example.app.beans;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
-import org.example.lab4.service.JwtCore;
-import org.example.lab4.service.UserService;
+import org.example.app.service.JwtCore;
+import org.example.app.service.UserService;
 
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContext;

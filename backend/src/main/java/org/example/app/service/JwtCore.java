@@ -1,4 +1,4 @@
-package org.example.lab4.service;
+package org.example.app.service;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;

@@ -1,4 +1,4 @@
-package org.example.lab4.DTO;
+package org.example.app.DTO;
 
 public class PointResponse extends PointRequest {
     private boolean isHit;

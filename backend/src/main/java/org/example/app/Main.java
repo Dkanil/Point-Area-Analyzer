@@ -1,13 +1,13 @@
-package org.example.lab4;
+package org.example.app;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class Lab4Application {
+public class Main {
 
     public static void main(String[] args) {
-        SpringApplication.run(Lab4Application.class, args);
+        SpringApplication.run(Main.class, args);
     }
 
 }

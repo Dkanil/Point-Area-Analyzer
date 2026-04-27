@@ -1,9 +1,9 @@
-package org.example.lab4.controller;
+package org.example.app.controller;
 
-import org.example.lab4.DTO.PointRequest;
-import org.example.lab4.DTO.PointResponse;
-import org.example.lab4.service.JwtCore;
-import org.example.lab4.service.PointService;
+import org.example.app.DTO.PointRequest;
+import org.example.app.DTO.PointResponse;
+import org.example.app.service.JwtCore;
+import org.example.app.service.PointService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.RequestMapping;

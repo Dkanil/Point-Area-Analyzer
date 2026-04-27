@@ -1,8 +1,8 @@
-package org.example.lab4.controller;
+package org.example.app.controller;
 
-import org.example.lab4.DTO.AuthRequest;
-import org.example.lab4.DTO.JwtResponse;
-import org.example.lab4.service.AuthService;
+import org.example.app.DTO.AuthRequest;
+import org.example.app.DTO.JwtResponse;
+import org.example.app.service.AuthService;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;

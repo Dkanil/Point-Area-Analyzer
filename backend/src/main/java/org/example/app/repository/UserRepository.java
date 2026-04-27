@@ -1,6 +1,6 @@
-package org.example.lab4.repository;
+package org.example.app.repository;
 
-import org.example.lab4.model.User;
+import org.example.app.model.User;
 import org.jooq.DSLContext;
 import org.springframework.stereotype.Repository;
 

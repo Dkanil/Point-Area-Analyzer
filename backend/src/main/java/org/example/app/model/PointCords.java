@@ -1,4 +1,4 @@
-package org.example.lab4.model;
+package org.example.app.model;
 
 public class PointCords {
     private Long id;

@@ -1,9 +1,9 @@
-package org.example.lab4.service;
+package org.example.app.service;
 
-import org.example.lab4.DTO.PointRequest;
-import org.example.lab4.DTO.PointResponse;
-import org.example.lab4.model.PointCords;
-import org.example.lab4.repository.PointRepository;
+import org.example.app.DTO.PointRequest;
+import org.example.app.DTO.PointResponse;
+import org.example.app.model.PointCords;
+import org.example.app.repository.PointRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;

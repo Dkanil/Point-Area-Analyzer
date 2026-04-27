@@ -21,3 +21,5 @@ org-spring-boot-starter-jooq = { module = "org.springframework.boot:spring-boot-
 org-spring-boot-starter-security = { module = "org.springframework.boot:spring-boot-starter-security", version.ref = "spring-boot" }
 org-spring-boot-starter-thymeleaf = { module = "org.springframework.boot:spring-boot-starter-thymeleaf", version.ref = "spring-boot" }
 org-spring-boot-starter-web = { module = "org.springframework.boot:spring-boot-starter-web", version.ref = "spring-boot" }
+org-spring-boot-starter-test = { module = "org.springframework.boot:spring-boot-starter-test", version.ref = "spring-boot" }
+com-microsoft-playwright = { module = "com.microsoft.playwright:playwright", version = "1.58.0" }

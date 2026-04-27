@@ -1,7 +1,9 @@
-package org.example.lab4.service;
+package org.example.app.service;
 
-import org.example.lab4.model.User;
-import org.example.lab4.repository.UserRepository;
+import org.example.app.model.User;
+import org.example.app.repository.UserRepository;
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -13,9 +15,11 @@ import java.util.Objects;
 @Service
 public class UserService implements UserDetailsService {
     private final UserRepository userRepository;
+    private final MessageSource messageSource;
 
-    public UserService(UserRepository userRepository) {
+    public UserService(UserRepository userRepository, MessageSource messageSource) {
         this.userRepository = userRepository;
+        this.messageSource = messageSource;
     }
 
     public void save(User user) {
@@ -24,7 +28,10 @@ public class UserService implements UserDetailsService {
 
     public void create(User user) {
         if (userRepository.existsByUsername(user.getUsername())) {
-            throw new IllegalArgumentException("Пользователь с таким именем уже существует");
+            throw new IllegalArgumentException(messageSource.getMessage(
+                    "user.exist",
+                    null,
+                    LocaleContextHolder.getLocale()));
         }
         save(user);
     }
@@ -44,8 +51,11 @@ public class UserService implements UserDetailsService {
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         return userRepository.findByUsername(username)
-                .orElseThrow(() -> new UsernameNotFoundException(String.format("Пользователь '%s' не найден", username)
-                ));
+                .orElseThrow(() -> new UsernameNotFoundException(messageSource.getMessage(
+                        "user.not.found",
+                        new Object[]{username},
+                        LocaleContextHolder.getLocale()))
+                );
     }
 
 }

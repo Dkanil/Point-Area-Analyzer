@@ -1,7 +1,7 @@
-package org.example.lab4.config;
+package org.example.app.config;
 
-import org.example.lab4.beans.TokenFilter;
-import org.example.lab4.service.UserService;
+import org.example.app.beans.TokenFilter;
+import org.example.app.service.UserService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpStatus;

@@ -1,14 +1,14 @@
-package org.example.lab4.service;
+package org.example.app.service;
 
-import org.example.lab4.DTO.AuthRequest;
-import org.example.lab4.DTO.JwtResponse;
+import org.example.app.DTO.AuthRequest;
+import org.example.app.DTO.JwtResponse;
 
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.example.lab4.model.User;
+import org.example.app.model.User;
 
 @Service
 public class AuthService {

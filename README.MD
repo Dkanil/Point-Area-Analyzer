@@ -49,7 +49,7 @@ psql -U <username> -d <database_name> -f backend/src/main/resources/init.sql
 ```bash
 cd backend
 ./gradlew build
-java -jar build/libs/lab4.jar
+java -jar build/libs/app.jar
 ```
 
 **Сборка и запуск Frontend:**
