@@ -72,3 +72,20 @@ tasks.withType(JavaCompile).configureEach {
 test {
     useJUnitPlatform()
 }
+
+tasks.register('compile', Exec) {
+    group = 'custom'
+    description = 'Compilation of the project source codes.'
+    inputs.files(tasks.named('generateJooq'))
+    inputs.dir('src/main/java')
+    outputs.dir('build/classes/java/main')
+    doFirst {
+        def javaFiles = fileTree('src/main').matching { include '**/*.java' }
+                .files.collect { it.absolutePath }
+        def jooqGeneratedFiles = fileTree('build/generated-src/jooq').matching { include '**/*.java' }
+                .files.collect { it.absolutePath }
+        javaFiles.addAll(jooqGeneratedFiles)
+        commandLine = ['javac', '-d', 'build/classes/java/main',
+                       '-cp', configurations.compileClasspath.asPath] + javaFiles
+    }
+}
