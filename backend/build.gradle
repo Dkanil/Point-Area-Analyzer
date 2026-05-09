@@ -73,6 +73,12 @@ tasks.named('generateJooq') {
     inputs.file('src/main/resources/init.sql')
     allInputsDeclared = true
     outputs.dir('build/generated-src/jooq')
+    doFirst {
+        def jooqDir = file('build/generated-src/jooq')
+        if (jooqDir.exists()) {
+            jooqDir.deleteDir()
+        }
+    }
 }
 
 tasks.register('compile') {
@@ -84,6 +90,13 @@ tasks.register('compile') {
 
     def outputDir = file('build/classes/java/main')
     outputs.dir(outputDir)
+
+    doFirst {
+        if (outputDir.exists()) {
+            outputDir.deleteDir()
+        }
+        outputDir.mkdirs()
+    }
     doLast {
         def javaFiles = fileTree('src/main').matching { include '**/*.java' }
                 .files.collect { it.absolutePath }
@@ -109,6 +122,12 @@ tasks.register('compileTests') {
     def outputDir = file('build/classes/java/test')
     outputs.dir(outputDir)
 
+    doFirst {
+        if (outputDir.exists()) {
+            outputDir.deleteDir()
+        }
+        outputDir.mkdirs()
+    }
     doLast {
         if (!testDir.exists()) {
             println "No test Java files found to compile."
@@ -128,9 +147,7 @@ tasks.register('compileTests') {
     }
 }
 
-tasks.register('myTest', Test) {
-    group = 'custom'
-    description = 'Runs junit tests.'
+tasks.named('test') {
     testClassesDirs = tasks.named('compileTests').get().outputs.files.asFileTree
     classpath = tasks.named('compile').get().outputs.files +
             tasks.named('compileTests').get().outputs.files +
@@ -138,6 +155,8 @@ tasks.register('myTest', Test) {
     useJUnitPlatform()
     testLogging {
         events "passed", "skipped", "failed"
+        showStandardStreams = true
+        exceptionFormat = "full"
     }
     ignoreFailures = false
 }
@@ -181,6 +200,13 @@ tasks.register('native2ascii') {
     outputs.dir(layout.buildDirectory.dir(
             providers.gradleProperty('locales.output.dir')
                     .getOrElse('generated-resources/ascii-locales')))
+    doFirst {
+        def targetDir = outputs.files.singleFile
+        if (targetDir.exists()) {
+            targetDir.deleteDir()
+        }
+        targetDir.mkdirs()
+    }
     doLast {
         def targetDir = outputs.files.singleFile
         inputs.files.each { File inputFile ->
@@ -198,7 +224,7 @@ tasks.register('native2ascii') {
 tasks.register('myBuild') {
     group = 'custom'
     description = 'Compilation of the project source codes and packaging them into an executable jar archive.'
-    inputs.files(tasks.named('myTest'))
+    inputs.files(tasks.named('test'))
     inputs.files(tasks.named('bootJar'))
     outputs.files(tasks.named('bootJar'))
 }

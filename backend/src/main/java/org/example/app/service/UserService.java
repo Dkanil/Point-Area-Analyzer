@@ -36,10 +36,6 @@ public class UserService implements UserDetailsService {
         save(user);
     }
 
-    public UserDetailsService userDetailsService() {
-        return this;
-    }
-
     public User getCurrentUser() {
         String username = Objects
                 .requireNonNull(SecurityContextHolder.getContext().getAuthentication())

@@ -41,9 +41,7 @@ public class AuthService {
                 request.getPassword()
         ));
 
-        UserDetails user = userService
-                .userDetailsService()
-                .loadUserByUsername(request.getUsername());
+        UserDetails user = userService.loadUserByUsername(request.getUsername());
 
         return new JwtResponse(jwtCore.generateToken(user));
     }
