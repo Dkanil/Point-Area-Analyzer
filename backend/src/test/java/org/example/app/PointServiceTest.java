@@ -22,42 +22,64 @@ public class PointServiceTest {
 
     @Test
     public void hitFirstQuarter() {
-        PointResponse pointResponse = pointService.processAndSavePoint(new PointRequest(1, 1, 3, null), "username");
+        PointResponse pointResponse = pointService.processAndSavePoint(
+                new PointRequest(1, 1, 3, null), "username");
         assertTrue(pointResponse.getIsHit());
     }
+
     @Test
     public void hitSecondQuarter() {
-        PointResponse pointResponse = pointService.processAndSavePoint(new PointRequest(-0.5, 0.5, 3, null), "username");
+        PointResponse pointResponse = pointService.processAndSavePoint(
+                new PointRequest(-0.5, 0.5, 3, null), "username");
         assertTrue(pointResponse.getIsHit());
     }
+
     @Test
     public void hitThirdQuarter() {
-        PointResponse pointResponse = pointService.processAndSavePoint(new PointRequest(-2, -2, 4, null), "username");
+        PointResponse pointResponse = pointService.processAndSavePoint(
+                new PointRequest(-2, -2, 4, null), "username");
         assertTrue(pointResponse.getIsHit());
     }
+
     @Test
     public void missFirstQuarter() {
-        PointResponse pointResponse = pointService.processAndSavePoint(new PointRequest(2, 1.6, 3, null), "username");
+        PointResponse pointResponse = pointService.processAndSavePoint(
+                new PointRequest(2, 1.6, 3, null), "username");
         assertFalse(pointResponse.getIsHit());
     }
+
     @Test
     public void missSecondQuarter() {
-        PointResponse pointResponse = pointService.processAndSavePoint(new PointRequest(-2, 2, 3, null), "username");
+        PointResponse pointResponse = pointService.processAndSavePoint(
+                new PointRequest(-2, 2, 3, null), "username");
         assertFalse(pointResponse.getIsHit());
     }
+
     @Test
     public void missThirdQuarter() {
-        PointResponse pointResponse = pointService.processAndSavePoint(new PointRequest(-4, -4, 1, null), "username");
+        PointResponse pointResponse = pointService.processAndSavePoint(
+                new PointRequest(-4, -4, 1, null), "username");
         assertFalse(pointResponse.getIsHit());
     }
+
     @Test
     public void missFourthQuarter() {
-        PointResponse pointResponse = pointService.processAndSavePoint(new PointRequest(0.001, -0.0001, 5, null), "username");
+        PointResponse pointResponse = pointService.processAndSavePoint(
+                new PointRequest(0.001, -0.0001, 5, null), "username");
         assertFalse(pointResponse.getIsHit());
     }
+
     @Test
     public void hitZero() {
-        PointResponse pointResponse = pointService.processAndSavePoint(new PointRequest(0, 0, 1, null), "username");
+        PointResponse pointResponse = pointService.processAndSavePoint(
+                new PointRequest(0, 0, 1, null), "username");
+        assertTrue(pointResponse.getIsHit());
+    }
+
+    @Test
+    public void hitFirstQuarterBorder() {
+        PointResponse pointResponse = pointService.processAndSavePoint(
+                new PointRequest(3, 1.5, 3, null), "username");
         assertTrue(pointResponse.getIsHit());
     }
 }

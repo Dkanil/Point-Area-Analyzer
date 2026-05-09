@@ -31,6 +31,17 @@ dependencies {
     jooqGenerator libs.jooq.meta.extensions
 }
 
+sourceSets {
+    functionalTest {
+        java.srcDir 'src/functionalTest/java'
+    }
+}
+
+configurations {
+    functionalTestImplementation.extendsFrom testImplementation
+    functionalTestRuntimeOnly.extendsFrom testRuntimeOnly
+}
+
 jooq {
     version = libs.versions.jooq.get()
     configurations {
@@ -73,40 +84,47 @@ tasks.named('generateJooq') {
     inputs.file('src/main/resources/init.sql')
     allInputsDeclared = true
     outputs.dir('build/generated-src/jooq')
-    doFirst {
-        def jooqDir = file('build/generated-src/jooq')
-        if (jooqDir.exists()) {
-            jooqDir.deleteDir()
+}
+
+def compileJavaSource(Task task, File inputDir, File outputDir, FileCollection classpath,
+                      List<File> additionalSourceDirs = []) {
+    if (!inputDir.exists()) {
+        println "No Java files found to compile."
+        return
+    }
+    def javaFiles = fileTree(inputDir).matching { include '**/*.java' }
+            .files.collect { it.absolutePath }
+    for (File additionalDir : additionalSourceDirs) {
+        if (additionalDir.exists()) {
+            javaFiles.addAll(fileTree(additionalDir).matching { include '**/*.java' }
+                    .files.collect { it.absolutePath })
         }
     }
+    outputDir.mkdirs()
+
+    task.services.get(ExecOperations).exec {
+        commandLine = ['javac', '-d', outputDir.absolutePath, '-cp', classpath.asPath] + javaFiles
+    }
+
 }
 
 tasks.register('compile') {
     group = 'custom'
     description = 'Compilation of the project source codes.'
     inputs.files(tasks.named('generateJooq'))
-    inputs.dir('src/main/java')
+    def javaDir = file('src/main/java')
+    inputs.dir(javaDir)
     inputs.files(configurations.compileClasspath)
 
     def outputDir = file('build/classes/java/main')
     outputs.dir(outputDir)
 
-    doFirst {
-        if (outputDir.exists()) {
-            outputDir.deleteDir()
-        }
-        outputDir.mkdirs()
-    }
     doLast {
-        def javaFiles = fileTree('src/main').matching { include '**/*.java' }
-                .files.collect { it.absolutePath }
-        def jooqGeneratedFiles = fileTree('build/generated-src/jooq').matching { include '**/*.java' }
-                .files.collect { it.absolutePath }
-        javaFiles.addAll(jooqGeneratedFiles)
-        services.get(ExecOperations).exec {
-            commandLine = ['javac', '-d', outputDir.absolutePath,
-                           '-cp', configurations.compileClasspath.asPath] + javaFiles
-        }
+        compileJavaSource(it,
+                javaDir,
+                outputDir,
+                configurations.compileClasspath,
+                [file('build/generated-src/jooq')])
     }
 }
 
@@ -122,48 +140,66 @@ tasks.register('compileTests') {
     def outputDir = file('build/classes/java/test')
     outputs.dir(outputDir)
 
-    doFirst {
-        if (outputDir.exists()) {
-            outputDir.deleteDir()
-        }
-        outputDir.mkdirs()
-    }
     doLast {
-        if (!testDir.exists()) {
-            println "No test Java files found to compile."
-            return
-        }
-        def testJavaFiles = fileTree(testDir).matching { include '**/*.java' }
-                .files.collect { it.absolutePath }
+        compileJavaSource(it,
+                testDir,
+                outputDir,
+                configurations.testCompileClasspath + tasks.named('compile').get().outputs.files)
+    }
+}
 
-        outputDir.mkdirs()
+def runJunitTests(Task task, FileCollection compiledFiles, FileCollection classpath) {
+    task.with {
+        testClassesDirs = compiledFiles.asFileTree
 
-        services.get(ExecOperations).exec {
-            commandLine = ['javac', '-d', outputDir.absolutePath,
-                           '-cp', configurations.testCompileClasspath.asPath
-                           +File.pathSeparator
-                           +tasks.named('compile').get().outputs.files.singleFile.absolutePath] + testJavaFiles
+        delegate.classpath = files(tasks.named('compile').get().outputs.files, compiledFiles, classpath)
+        useJUnitPlatform()
+        jvmArgs("-XX:+EnableDynamicAgentLoading")
+
+        testLogging {
+            events "passed", "skipped", "failed"
+            showStandardStreams = true
         }
     }
 }
 
 tasks.named('test') {
-    testClassesDirs = tasks.named('compileTests').get().outputs.files.asFileTree
-    classpath = tasks.named('compile').get().outputs.files +
-            tasks.named('compileTests').get().outputs.files +
-            configurations.testRuntimeClasspath
-    useJUnitPlatform()
-    testLogging {
-        events "passed", "skipped", "failed"
-        showStandardStreams = true
-        exceptionFormat = "full"
-    }
+    runJunitTests(it,
+            tasks.named('compileTests').get().outputs.files,
+            configurations.testRuntimeClasspath)
+
     ignoreFailures = false
 }
 
-tasks.named('bootJar') {
-    classpath = files(tasks.named('compile')) + configurations.runtimeClasspath
+tasks.register('compileFunctionalTests') {
+    group = 'custom'
+    description = 'Compilation of the functional test source codes.'
+    def funcTestDir = file('src/functionalTest/java')
+    if (funcTestDir.exists()) {
+        inputs.dir(funcTestDir)
+    }
+    inputs.files(tasks.named('compile'))
+    inputs.files(configurations.functionalTestCompileClasspath)
+    def outputDir = file('build/classes/java/functionalTest')
+    outputs.dir(outputDir)
 
+    doLast {
+        compileJavaSource(it,
+                funcTestDir,
+                outputDir,
+                configurations.functionalTestCompileClasspath + tasks.named('compile').get().outputs.files)
+    }
+}
+
+tasks.register('functionalTest', Test) {
+    group = 'custom'
+    description = 'Runs the functional tests.'
+
+    // todo
+}
+
+tasks.named('bootJar') {
+    classpath = files(tasks.named('compile'), configurations.runtimeClasspath)
     from('src/main/resources') {
         into('BOOT-INF/classes')
         exclude 'locales/**/*.properties'
@@ -191,26 +227,18 @@ tasks.register('myClean') {
     }
 }
 
-tasks.register('native2ascii') {
+tasks.register('native2ascii') {// todo тест который проверяет корректность конвертации
     group = 'custom'
     description = 'Converts localization files like "native2ascii"'
     def sourceDir = file(providers.gradleProperty('locales.input.dir')
             .getOrElse('src/main/resources/locales'))
     inputs.dir(sourceDir)
-    outputs.dir(layout.buildDirectory.dir(
-            providers.gradleProperty('locales.output.dir')
-                    .getOrElse('generated-resources/ascii-locales')))
-    doFirst {
-        def targetDir = outputs.files.singleFile
-        if (targetDir.exists()) {
-            targetDir.deleteDir()
-        }
-        targetDir.mkdirs()
-    }
+    def outputDir = file(providers.gradleProperty('locales.output.dir')
+            .getOrElse('build/generated-resources/ascii-locales'))
+    outputs.dir(outputDir)
     doLast {
-        def targetDir = outputs.files.singleFile
         inputs.files.each { File inputFile ->
-            def outputFile = new File(targetDir, sourceDir.toPath().relativize(inputFile.toPath()).toString())
+            def outputFile = new File(outputDir, sourceDir.toPath().relativize(inputFile.toPath()).toString())
             outputFile.parentFile.mkdirs()
 
             def convertedContent = inputFile.getText('UTF-8').toCharArray().collect { char c ->
@@ -226,6 +254,7 @@ tasks.register('myBuild') {
     description = 'Compilation of the project source codes and packaging them into an executable jar archive.'
     inputs.files(tasks.named('test'))
     inputs.files(tasks.named('bootJar'))
+    inputs.files(tasks.named('functionalTest'))
     outputs.files(tasks.named('bootJar'))
 }
 
@@ -236,5 +265,19 @@ tasks.register('diff') {
     doLast {
         // todo
         // git.classes.file - file with the list of classes to check for changes
+    }
+}
+
+def cleanBeforeTasks = ['compile', 'compileTests', 'compileFunctionalTests', 'native2ascii', 'generateJooq']
+cleanBeforeTasks.each { taskName ->
+    tasks.named(taskName) {
+        doFirst {
+            outputs.files.each { outputFile ->
+                if (outputFile.exists()) {
+                    outputFile.delete()
+                }
+                outputFile.mkdirs()
+            }
+        }
     }
 }
