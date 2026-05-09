@@ -69,23 +69,146 @@ tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8'
 }
 
-test {
-    useJUnitPlatform()
+tasks.named('generateJooq') {
+    inputs.file('src/main/resources/init.sql')
+    allInputsDeclared = true
+    outputs.dir('build/generated-src/jooq')
 }
 
-tasks.register('compile', Exec) {
+tasks.register('compile') {
     group = 'custom'
     description = 'Compilation of the project source codes.'
     inputs.files(tasks.named('generateJooq'))
     inputs.dir('src/main/java')
-    outputs.dir('build/classes/java/main')
-    doFirst {
+    inputs.files(configurations.compileClasspath)
+
+    def outputDir = file('build/classes/java/main')
+    outputs.dir(outputDir)
+    doLast {
         def javaFiles = fileTree('src/main').matching { include '**/*.java' }
                 .files.collect { it.absolutePath }
         def jooqGeneratedFiles = fileTree('build/generated-src/jooq').matching { include '**/*.java' }
                 .files.collect { it.absolutePath }
         javaFiles.addAll(jooqGeneratedFiles)
-        commandLine = ['javac', '-d', 'build/classes/java/main',
-                       '-cp', configurations.compileClasspath.asPath] + javaFiles
+        services.get(ExecOperations).exec {
+            commandLine = ['javac', '-d', outputDir.absolutePath,
+                           '-cp', configurations.compileClasspath.asPath] + javaFiles
+        }
+    }
+}
+
+tasks.register('compileTests') {
+    group = 'custom'
+    description = 'Compilation of the test source codes.'
+    def testDir = file('src/test/java')
+    if (testDir.exists()) {
+        inputs.dir(testDir)
+    }
+    inputs.files(tasks.named('compile'))
+    inputs.files(configurations.testCompileClasspath)
+    def outputDir = file('build/classes/java/test')
+    outputs.dir(outputDir)
+
+    doLast {
+        if (!testDir.exists()) {
+            println "No test Java files found to compile."
+            return
+        }
+        def testJavaFiles = fileTree(testDir).matching { include '**/*.java' }
+                .files.collect { it.absolutePath }
+
+        outputDir.mkdirs()
+
+        services.get(ExecOperations).exec {
+            commandLine = ['javac', '-d', outputDir.absolutePath,
+                           '-cp', configurations.testCompileClasspath.asPath
+                           +File.pathSeparator
+                           +tasks.named('compile').get().outputs.files.singleFile.absolutePath] + testJavaFiles
+        }
+    }
+}
+
+tasks.register('myTest', Test) {
+    group = 'custom'
+    description = 'Runs junit tests.'
+    testClassesDirs = tasks.named('compileTests').get().outputs.files.asFileTree
+    classpath = tasks.named('compile').get().outputs.files +
+            tasks.named('compileTests').get().outputs.files +
+            configurations.testRuntimeClasspath
+    useJUnitPlatform()
+    testLogging {
+        events "passed", "skipped", "failed"
+    }
+    ignoreFailures = false
+}
+
+tasks.named('bootJar') {
+    classpath = files(tasks.named('compile')) + configurations.runtimeClasspath
+
+    from('src/main/resources') {
+        into('BOOT-INF/classes')
+        exclude 'locales/**/*.properties'
+    }
+    from(tasks.named('native2ascii')) {
+        into('BOOT-INF/classes/locales')
+    }
+    manifest {
+        attributes(
+                'Manifest-Version': '1.0',
+                'Implementation-Version': providers.gradleProperty('app.version').getOrElse('1.0.0'),
+                'Start-Class': providers.gradleProperty('main.class.name').get()
+        )
+    }
+}
+
+tasks.register('myClean') {
+    group = 'custom'
+    description = 'Deletes build classes and all temp files.'
+    outputs.upToDateWhen {
+        !file('build').exists()
+    }
+    doLast {
+        delete 'build'
+    }
+}
+
+tasks.register('native2ascii') {
+    group = 'custom'
+    description = 'Converts localization files like "native2ascii"'
+    def sourceDir = file(providers.gradleProperty('locales.input.dir')
+            .getOrElse('src/main/resources/locales'))
+    inputs.dir(sourceDir)
+    outputs.dir(layout.buildDirectory.dir(
+            providers.gradleProperty('locales.output.dir')
+                    .getOrElse('generated-resources/ascii-locales')))
+    doLast {
+        def targetDir = outputs.files.singleFile
+        inputs.files.each { File inputFile ->
+            def outputFile = new File(targetDir, sourceDir.toPath().relativize(inputFile.toPath()).toString())
+            outputFile.parentFile.mkdirs()
+
+            def convertedContent = inputFile.getText('UTF-8').toCharArray().collect { char c ->
+                (c > 127) ? String.format("\\u%04x", (c as int)) : c
+            }.join("")
+            outputFile.write(convertedContent, "ISO-8859-1")
+        }
+    }
+}
+
+tasks.register('myBuild') {
+    group = 'custom'
+    description = 'Compilation of the project source codes and packaging them into an executable jar archive.'
+    inputs.files(tasks.named('myTest'))
+    inputs.files(tasks.named('bootJar'))
+    outputs.files(tasks.named('bootJar'))
+}
+
+tasks.register('diff') {
+    group = 'custom'
+    description = 'performs a check of the working copy status, and if the changes affect the classes specified in ' +
+            'the parameters file, it performs a commit to the git repository.'
+    doLast {
+        // todo
+        // git.classes.file - file with the list of classes to check for changes
     }
 }

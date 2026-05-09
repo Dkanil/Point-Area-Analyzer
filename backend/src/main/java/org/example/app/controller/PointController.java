@@ -1,7 +1,7 @@
 package org.example.app.controller;
 
-import org.example.app.DTO.PointRequest;
-import org.example.app.DTO.PointResponse;
+import org.example.app.dto.PointRequest;
+import org.example.app.dto.PointResponse;
 import org.example.app.service.JwtCore;
 import org.example.app.service.PointService;
 import org.springframework.http.ResponseEntity;

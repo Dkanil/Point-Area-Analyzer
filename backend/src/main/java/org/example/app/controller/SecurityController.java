@@ -1,7 +1,7 @@
 package org.example.app.controller;
 
-import org.example.app.DTO.AuthRequest;
-import org.example.app.DTO.JwtResponse;
+import org.example.app.dto.AuthRequest;
+import org.example.app.dto.JwtResponse;
 import org.example.app.service.AuthService;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;

@@ -1,7 +1,7 @@
 package org.example.app.service;
 
-import org.example.app.DTO.PointRequest;
-import org.example.app.DTO.PointResponse;
+import org.example.app.dto.PointRequest;
+import org.example.app.dto.PointResponse;
 import org.example.app.model.PointCords;
 import org.example.app.repository.PointRepository;
 import org.springframework.stereotype.Service;

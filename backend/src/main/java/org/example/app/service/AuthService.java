@@ -1,7 +1,7 @@
 package org.example.app.service;
 
-import org.example.app.DTO.AuthRequest;
-import org.example.app.DTO.JwtResponse;
+import org.example.app.dto.AuthRequest;
+import org.example.app.dto.JwtResponse;
 
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;

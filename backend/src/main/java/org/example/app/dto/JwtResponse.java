@@ -1,4 +1,4 @@
-package org.example.app.DTO;
+package org.example.app.dto;
 
 public class JwtResponse {
     private String access_token;

@@ -6,7 +6,7 @@ jsonwebtoken = "0.12.6"
 jakarta-persistence-jakarta-persistence-api = "3.2.0"
 jakarta-validation-jakarta-validation-api = "3.1.1"
 postgresql = "42.7.7"
-jooq = "3.19.32"
+jooq = "3.21.2"
 spring-boot = "4.0.0"
 
 [libraries]
