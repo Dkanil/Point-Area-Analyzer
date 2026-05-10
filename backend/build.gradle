@@ -194,8 +194,14 @@ tasks.register('compileFunctionalTests') {
 tasks.register('functionalTest', Test) {
     group = 'custom'
     description = 'Runs the functional tests.'
+    doFirst {
+        startDockerEnv(it)
+    }
+    runJunitTests(it,
+            tasks.named('compileFunctionalTests').get().outputs.files,
+            configurations.functionalTestRuntimeClasspath)
 
-    // todo
+    finalizedBy tasks.named('dockerDown')
 }
 
 tasks.named('bootJar') {
@@ -256,6 +262,23 @@ tasks.register('myBuild') {
     inputs.files(tasks.named('bootJar'))
     inputs.files(tasks.named('functionalTest'))
     outputs.files(tasks.named('bootJar'))
+}
+
+def startDockerEnv(Task task) {
+    task.services.get(ExecOperations).exec {
+        commandLine 'docker-compose', '-f', '../docker-compose.yaml', 'up', '-d', '--build'
+    }
+}
+
+tasks.register('dockerBuild') {
+    group = 'docker'
+    doLast { startDockerEnv(it) }
+}
+
+tasks.register('dockerDown', Exec) {
+    group = 'docker'
+    description = 'Stops the docker containers'
+    commandLine 'docker-compose', '-f', '../docker-compose.yaml', 'down', '-v'
 }
 
 tasks.register('diff') {

@@ -4,7 +4,7 @@ COPY build.gradle settings.gradle gradle.properties ./
 COPY gradle ./gradle
 RUN gradle dependencies --no-daemon
 COPY . .
-RUN gradle myBuild --no-daemon
+RUN gradle myBuild -x functionalTest --no-daemon
 
 FROM eclipse-temurin:21-jdk
 COPY --from=build /app/build/libs/app.jar app.jar
