@@ -194,14 +194,15 @@ tasks.register('compileFunctionalTests') {
 tasks.register('functionalTest', Test) {
     group = 'custom'
     description = 'Runs the functional tests.'
+    inputs.files(tasks.named('bootJar'))
     doFirst {
-        startDockerEnv(it)
+        startTestDockerEnv(it)
     }
     runJunitTests(it,
             tasks.named('compileFunctionalTests').get().outputs.files,
             configurations.functionalTestRuntimeClasspath)
 
-    finalizedBy tasks.named('dockerDown')
+    finalizedBy tasks.named('dockerTestDown')
 }
 
 tasks.named('bootJar') {
@@ -264,21 +265,16 @@ tasks.register('myBuild') {
     outputs.files(tasks.named('bootJar'))
 }
 
-def startDockerEnv(Task task) {
+def startTestDockerEnv(Task task) {
     task.services.get(ExecOperations).exec {
-        commandLine 'docker-compose', '-f', '../docker-compose.yaml', 'up', '-d', '--build'
+        commandLine 'docker-compose', '-f', '../docker-compose.test.yaml', 'up', '-d'
     }
 }
 
-tasks.register('dockerBuild') {
+tasks.register('dockerTestDown', Exec) {
     group = 'docker'
-    doLast { startDockerEnv(it) }
-}
-
-tasks.register('dockerDown', Exec) {
-    group = 'docker'
-    description = 'Stops the docker containers'
-    commandLine 'docker-compose', '-f', '../docker-compose.yaml', 'down', '-v'
+    description = 'Stops the test docker containers'
+    commandLine 'docker-compose', '-f', '../docker-compose.test.yaml', 'down', '-v'
 }
 
 tasks.register('diff') {
