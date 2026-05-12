@@ -48,7 +48,7 @@ psql -U <username> -d <database_name> -f backend/src/main/resources/init.sql
 
 ```bash
 cd backend
-./gradlew build
+./gradlew myBuild
 java -jar build/libs/app.jar
 ```
 
@@ -61,3 +61,13 @@ ng serve
 ```
 
 Сервис будет доступен по адресу http://localhost:4200/
+
+## Функциональные тесты
+
+Проект включает 15 функциональных тестов на базе Playwright.
+
+**Как запустить?**
+```
+cd backend
+.\gradlew functionalTest
+```
