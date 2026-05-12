@@ -233,7 +233,7 @@ tasks.register('myClean') {
     }
 }
 
-tasks.register('native2ascii') {// todo тест который проверяет корректность конвертации
+tasks.register('native2ascii') {
     group = 'custom'
     description = 'Converts localization files like "native2ascii"'
     def sourceDir = file(providers.gradleProperty('locales.input.dir')
@@ -286,8 +286,28 @@ tasks.register('diff') {
     description = 'performs a check of the working copy status, and if the changes affect the classes specified in ' +
             'the parameters file, it performs a commit to the git repository.'
     doLast {
-        // todo
-        // git.classes.file - file with the list of classes to check for changes
+        def gitRootDir = projectDir.parentFile
+        def checkList = file(providers.gradleProperty('git.classes.file')
+                .getOrElse('git-classes.txt')).readLines().findAll { !it.trim().isEmpty() }
+        def stdout = new ByteArrayOutputStream()
+        services.get(ExecOperations).exec {
+            workingDir gitRootDir
+            commandLine = ['git', 'status', '--porcelain']
+            standardOutput = stdout
+        }
+        def changedFiles = stdout.toString().trim().readLines().collect { it.substring(3).trim() }
+        def filesToStage = changedFiles.findAll { changedFile ->
+            checkList.any { check -> changedFile.contains(check) }
+        }
+        services.get(ExecOperations).exec {
+            workingDir gitRootDir
+            commandLine = ['git', 'add'] + filesToStage
+        }
+        services.get(ExecOperations).exec {
+            workingDir gitRootDir
+            commandLine = ['git', 'commit', '-m', "Auto-commit: update in ${filesToStage.join(', ')}"]
+            ignoreExitValue = true
+        }
     }
 }
 
