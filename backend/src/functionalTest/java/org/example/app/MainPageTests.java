@@ -2,7 +2,6 @@ package org.example.app;
 
 import com.microsoft.playwright.Browser;
 import com.microsoft.playwright.BrowserContext;
-import com.microsoft.playwright.BrowserType;
 import com.microsoft.playwright.Locator;
 import com.microsoft.playwright.Page;
 import com.microsoft.playwright.Playwright;
@@ -12,14 +11,6 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-
-import java.io.IOException;
-import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import static com.microsoft.playwright.assertions.PlaywrightAssertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -33,7 +24,7 @@ public class MainPageTests {
     static void beforeAll() {
         playwright = Playwright.create();
         browser = playwright.firefox().launch(
-                 new BrowserType.LaunchOptions().setHeadless(false).setSlowMo(500)
+                //new BrowserType.LaunchOptions().setHeadless(false)
         );
     }
 
@@ -43,14 +34,32 @@ public class MainPageTests {
         playwright.close();
     }
 
+
+    @BeforeEach
+    void beforeEach() {
+        createUser("test");
+    }
+
+    void createUser(String username) {
+        String token = Utils.createTestUser(username);
+        BrowserContext context = browser.newContext();
+        context.addInitScript("localStorage.setItem('token', '" + token + "');");
+        page = context.newPage();
+        page.navigate("http://localhost:4200/home");
+    }
+
+    @AfterEach
+    void afterEach() {
+        if (page != null) {
+            page.close();
+        }
+        Utils.deleteTestUser();
+    }
+
     @Test
     public void testHitByButton() {
-        page.navigate("http://localhost:4200/home");
         int rowsBefore = page.locator("table tbody tr").count();
-        page.getByRole(AriaRole.BUTTON, new Page.GetByRoleOptions().setName("0").setExact(true)).click();
-        page.getByRole(AriaRole.TEXTBOX, new Page.GetByRoleOptions().setName("-")).fill("0");
-        page.getByRole(AriaRole.BUTTON, new Page.GetByRoleOptions().setName("1")).nth(4).click();
-        page.getByRole(AriaRole.BUTTON, new Page.GetByRoleOptions().setName("Бахнуть орешником")).click();
+        submitPoint("0", "0");
 
         assertThat(page.locator("#boom-gif")).isVisible();
         Locator newRow = page.locator("table tbody tr").filter(new Locator.FilterOptions()
@@ -61,41 +70,124 @@ public class MainPageTests {
         ).first();
         int rowsAfter = page.locator("table tbody tr").count();
         assertThat(newRow).isVisible();
-        assertEquals(rowsBefore + 1,  rowsAfter);
+        assertEquals(rowsBefore + 1, rowsAfter);
     }
 
-    @BeforeEach
-    void createUser() {
-        try (HttpClient httpClient = HttpClient.newHttpClient()) {
-            HttpRequest request = HttpRequest.newBuilder(URI.create("http://localhost:8080/auth/sign-up"))
-                    .header("Content-Type", "application/json")
-                    .POST(HttpRequest.BodyPublishers.ofString("{\"username\":\"testUser\",\"password\":\"test\"}"))
-                    .build();
-            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+    @Test
+    public void testHitByClick() {
+        int rowsBefore = page.locator("table tbody tr").count();
+        page.getByRole(AriaRole.BUTTON, new Page.GetByRoleOptions().setName("2")).nth(2).click();
+        page.locator("#graphCanvas").click(new Locator.ClickOptions().setPosition(150, 150));
+        assertThat(page.locator("#boom-gif")).isVisible();
+        Locator newRow = page.locator("table tbody tr").filter(new Locator.FilterOptions()
+                .setHasText("0")
+                .setHasText("0")
+                .setHasText("2")
+                .setHasText("Гойд")
+        ).first();
+        int rowsAfter = page.locator("table tbody tr").count();
+        assertThat(newRow).isVisible();
+        assertEquals(rowsBefore + 1, rowsAfter);
+    }
 
-            assertEquals(200, response.statusCode(), "Can't create test user: " + response.statusCode() + " "
-                    + response.body());
+    @Test
+    public void testMissByButton() {
+        int rowsBefore = page.locator("table tbody tr").count();
+        submitPoint("2", "4");
+        Locator newRow = page.locator("table tbody tr").filter(new Locator.FilterOptions()
+                .setHasText("2")
+                .setHasText("4")
+                .setHasText("1")
+                .setHasText("Потужно")
+        ).first();
+        assertThat(page.locator("#miss-gif")).isVisible();
+        assertThat(newRow).isVisible();
+        assertEquals(rowsBefore + 1, page.locator("table tbody tr").count());
+    }
 
-            String token = extractToken(response.body());
-            BrowserContext context = browser.newContext();
-            context.addInitScript("localStorage.setItem('token', '" + token + "');");
-            page = context.newPage();
-            page.navigate("http://localhost:4200/home");
-        } catch (IOException | InterruptedException e) {
-            throw new RuntimeException("Can't create test user", e);
+    @Test
+    public void testEmptyCordsSubmitFail() {
+        page.getByRole(AriaRole.BUTTON, new Page.GetByRoleOptions().setName("Бахнуть орешником")).click();
+        page.waitForSelector(".error-message");
+        assertEquals("Введите координату Y", page.locator(".error-message").innerText());
+    }
+
+    @Test
+    public void testInvalidCordsSubmitFail() {
+        page.locator("input[name='y']").fill("AAAA");
+        page.getByRole(AriaRole.BUTTON, new Page.GetByRoleOptions().setName("Бахнуть орешником")).click();
+        page.waitForSelector(".error-message");
+        assertEquals("Координата Y должна быть числом в диапазоне -5..5", page.locator(".error-message").innerText());
+    }
+
+    @Test
+    public void testTwoUsers() {
+        page.locator("#graphCanvas").click(new Locator.ClickOptions().setPosition(150, 150));
+        Locator user1Point = page.locator("table tbody tr").filter(new Locator.FilterOptions()
+                .setHasText("0")
+                .setHasText("0")
+                .setHasText("2")
+                .setHasText("Гойд")
+        ).first();
+        assertThat(user1Point).isVisible();
+        if (page != null) {
+            page.close();
         }
+        createUser("test2");
+        int user1PointForUser2 = page.locator("table tbody tr").filter(new Locator.FilterOptions()
+                .setHasText("0")
+                .setHasText("0")
+                .setHasText("2")
+                .setHasText("Гойд")
+        ).count();
+        assertEquals(0, user1PointForUser2);
+
+        Utils.deleteTestUser("test2");
     }
 
-    @AfterEach
-    void deleteUser() {
-        Utils.deleteTestUser();
+    @Test
+    public void testLogoutSuccess() {
+        page.getByRole(AriaRole.BUTTON, new Page.GetByRoleOptions().setName("Выйти")).click();
+        page.waitForURL("**/auth");
+        assertEquals("http://localhost:4200/auth", page.url());
     }
 
-    private String extractToken(String responseBody) {
-        Matcher tokenMatcher = Pattern.compile("\"token\":\"([^\"]+)\"").matcher(responseBody);
-        if (tokenMatcher.find()) {
-            return tokenMatcher.group(1);
-        }
-        throw new RuntimeException("JWT token not found: " + responseBody);
+    private void submitPoint(String x, String y) {
+        submitPoint(x, y, "1");
+    }
+
+    private void submitPoint(String x, String y, String r) {
+        page.locator(".button-row").nth(0)
+                .getByRole(AriaRole.BUTTON, new Locator.GetByRoleOptions().setName(x).setExact(true)).click();
+        page.getByRole(AriaRole.TEXTBOX, new Page.GetByRoleOptions().setName("-")).fill(y);
+        page.locator(".button-row").nth(1)
+                .getByRole(AriaRole.BUTTON, new Locator.GetByRoleOptions().setName(r).setExact(true)).click();
+        page.getByRole(AriaRole.BUTTON, new Page.GetByRoleOptions().setName("Бахнуть орешником")).click();
+    }
+
+
+    @Test
+    public void testSubmitCorner() {
+        int rowsBefore = page.locator("table tbody tr").count();
+        submitPoint("2", "1", "2");
+        Locator newRow = page.locator("table tbody tr").nth(rowsBefore);
+        assertThat(newRow).isVisible();
+        assertThat(newRow).containsText("2");
+        assertEquals(rowsBefore + 1, page.locator("table tbody tr").count());
+    }
+
+    @Test
+    public void testDataReload() {
+        page.getByRole(AriaRole.BUTTON, new Page.GetByRoleOptions().setName("2")).nth(2).click();
+        page.locator("#graphCanvas").click(new Locator.ClickOptions().setPosition(150, 150));
+        Locator row = page.locator("table tbody tr").filter(new Locator.FilterOptions()
+                .setHasText("0")
+                .setHasText("2")).first();
+        assertThat(row).isVisible();
+        page.reload();
+        page.waitForLoadState();
+        int rowsAfterReload = page.locator("table tbody tr").count();
+        assertEquals(1, rowsAfterReload);
+        assertThat(row).isVisible();
     }
 }
