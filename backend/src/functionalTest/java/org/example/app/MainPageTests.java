@@ -45,7 +45,7 @@ public class MainPageTests {
         BrowserContext context = browser.newContext();
         context.addInitScript("localStorage.setItem('token', '" + token + "');");
         page = context.newPage();
-        page.navigate("http://localhost:4200/home");
+        page.navigate(Utils.frontendUrl("/home"));
     }
 
     @AfterEach
@@ -149,7 +149,7 @@ public class MainPageTests {
     public void testLogoutSuccess() {
         page.getByRole(AriaRole.BUTTON, new Page.GetByRoleOptions().setName("Выйти")).click();
         page.waitForURL("**/auth");
-        assertEquals("http://localhost:4200/auth", page.url());
+        assertEquals(Utils.frontendUrl("/auth"), page.url());
     }
 
     private void submitPoint(String x, String y) {

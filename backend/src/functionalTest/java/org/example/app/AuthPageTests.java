@@ -35,22 +35,22 @@ public class AuthPageTests {
     public void testLoginSuccess() {
         Utils.createTestUser();
         try (Page page = browser.newPage()) {
-            page.navigate("http://localhost:4200/auth");
+            page.navigate(Utils.frontendUrl("/auth"));
             page.locator("input[name='username']").fill("test");
             page.locator("input[name='password']").fill("test");
             page.locator(".form-buttons button").click();
 
             page.waitForURL("**/home");
-            assertEquals("http://localhost:4200/home", page.url());
+            assertEquals(Utils.frontendUrl("/home"), page.url());
         }
     }
 
     @Test
     public void testSkipAuthFail() {
         try (Page page = browser.newPage()) {
-            page.navigate("http://localhost:4200/home");
+            page.navigate(Utils.frontendUrl("/home"));
             page.waitForURL("**/auth");
-            assertEquals("http://localhost:4200/auth", page.url());
+            assertEquals(Utils.frontendUrl("/auth"), page.url());
         }
     }
 
@@ -67,7 +67,7 @@ public class AuthPageTests {
 
     private void loginInvalid(String username, String password) {
         try (Page page = browser.newPage()) {
-            page.navigate("http://localhost:4200/auth");
+            page.navigate(Utils.frontendUrl("/auth"));
             page.locator("input[name='username']").fill(username);
             page.locator("input[name='password']").fill(password);
             page.locator(".form-buttons button").click();
@@ -80,14 +80,14 @@ public class AuthPageTests {
     @Test
     public void testRegisterSuccess() {
         try (Page page = browser.newPage()) {
-            page.navigate("http://localhost:4200/auth");
+            page.navigate(Utils.frontendUrl("/auth"));
             page.locator("input[name='username']").fill("test");
             page.locator("input[name='password']").fill("test");
             page.locator("input[type='checkbox']").click();
             page.locator(".form-buttons button").click();
 
             page.waitForURL("**/home");
-            assertEquals("http://localhost:4200/home", page.url());
+            assertEquals(Utils.frontendUrl("/home"), page.url());
         }
     }
 
@@ -95,7 +95,7 @@ public class AuthPageTests {
     public void testRegisterExistingUser() {
         Utils.createTestUser();
         try (Page page = browser.newPage()) {
-            page.navigate("http://localhost:4200/auth");
+            page.navigate(Utils.frontendUrl("/auth"));
             page.locator("input[name='username']").fill("test");
             page.locator("input[name='password']").fill("test");
             page.locator("input[type='checkbox']").click();

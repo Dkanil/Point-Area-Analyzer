@@ -20,7 +20,7 @@ public class Utils {
     }
 
     protected static void deleteTestUser(String username) {
-        String url = getConfigValue("SPRING_DATASOURCE_URL", "jdbc:postgresql://localhost:5433/studs");
+        String url = getConfigValue("SPRING_DATASOURCE_URL", "spring.datasource.url", "jdbc:postgresql://localhost:5433/studs");
         String dbUsername = getConfigValue("SPRING_DATASOURCE_USERNAME", "admin");
         String dbPassword = getConfigValue("SPRING_DATASOURCE_PASSWORD", "admin");
 
@@ -34,11 +34,30 @@ public class Utils {
     }
 
     private static String getConfigValue(String envName, String defaultValue) {
+        return getConfigValue(envName, envName, defaultValue);
+    }
+
+    private static String getConfigValue(String envName, String propertyName, String defaultValue) {
         String value = System.getenv(envName);
         if (value != null && !value.isBlank()) return value;
-        value = System.getProperty(envName);
+        value = System.getProperty(propertyName);
         if (value != null && !value.isBlank()) return value;
         return defaultValue;
+    }
+
+    protected static String frontendUrl(String path) {
+        return buildUrl(getConfigValue("FRONTEND_BASE_URL", "frontend.baseUrl", "http://localhost:4200"), path);
+    }
+
+    protected static String backendUrl(String path) {
+        return buildUrl(getConfigValue("BACKEND_BASE_URL", "backend.baseUrl", "http://localhost:8080"), path);
+    }
+
+    private static String buildUrl(String baseUrl, String path) {
+        if (path.startsWith("/")) {
+            path = path.substring(1);
+        }
+        return baseUrl.endsWith("/") ? baseUrl + path : baseUrl + "/" + path;
     }
 
     protected static void createTestUser() {
@@ -47,7 +66,7 @@ public class Utils {
 
     protected static String createTestUser(String username) {
         try (HttpClient client = HttpClient.newHttpClient()) {
-            HttpRequest request = HttpRequest.newBuilder(URI.create("http://localhost:8080/auth/sign-up"))
+            HttpRequest request = HttpRequest.newBuilder(URI.create(backendUrl("/auth/sign-up")))
                     .header("Content-Type", "application/json")
                     .POST(HttpRequest.BodyPublishers.ofString(
                             String.format("{\"username\":\"%s\",\"password\":\"%s\"}", username, "test")))
