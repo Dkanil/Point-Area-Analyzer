@@ -3,7 +3,9 @@ package org.example.app.controller;
 import org.example.app.dto.AuthRequest;
 import org.example.app.dto.JwtResponse;
 import org.example.app.service.AuthService;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -25,5 +27,10 @@ class SecurityController {
     @PostMapping("/sign-in")
     public JwtResponse signIn(@RequestBody AuthRequest request) {
         return authService.signIn(request);
+    }
+
+    @GetMapping("/health")
+    public ResponseEntity<String> health() {
+        return ResponseEntity.ok("OK");
     }
 }
