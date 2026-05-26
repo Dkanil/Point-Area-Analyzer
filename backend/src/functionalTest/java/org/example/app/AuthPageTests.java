@@ -17,7 +17,7 @@ public class AuthPageTests {
     @BeforeAll
     static void initPlaywright() {
         playwright = Playwright.create();
-        browser = playwright.firefox().launch();
+        browser = playwright.chromium().launch();
     }
 
     @AfterAll

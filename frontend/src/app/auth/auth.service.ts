@@ -7,11 +7,15 @@ import {Observable} from 'rxjs';
 })
 export class AuthService {
 
+  private getApiUrl(): string {
+    return window.location.hostname === 'frontend' ? 'http://backend:8080' : 'http://localhost:8080';
+  }
+
   constructor(private http: HttpClient) {
   }
 
   authenticate(username: string, password: string, isRegistration: boolean): Observable<any> {
-    const url = `http://localhost:8080/auth/sign-${(isRegistration ? 'up' : 'in')}`;
+    const url = `${this.getApiUrl()}/auth/sign-${(isRegistration ? 'up' : 'in')}`;
     return this.http.post(url, {username, password});
   }
 }

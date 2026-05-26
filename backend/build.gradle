@@ -196,13 +196,16 @@ tasks.register('functionalTest', Test) {
     description = 'Runs the functional tests.'
     inputs.files(tasks.named('bootJar'))
     doFirst {
-        startTestDockerEnv(it)
+        if (!project.hasProperty('skipDockerUp')) {
+            startTestDockerEnv(it)
+        }
     }
     runJunitTests(it,
             tasks.named('compileFunctionalTests').get().outputs.files,
             configurations.functionalTestRuntimeClasspath)
-
-    finalizedBy tasks.named('dockerTestDown')
+    if (!project.hasProperty('skipDockerUp')) {
+        finalizedBy tasks.named('dockerTestDown')
+    }
 }
 
 tasks.named('bootJar') {

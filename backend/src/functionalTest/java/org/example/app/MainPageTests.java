@@ -23,7 +23,7 @@ public class MainPageTests {
     @BeforeAll
     static void beforeAll() {
         playwright = Playwright.create();
-        browser = playwright.firefox().launch(
+        browser = playwright.chromium().launch(
                 //new BrowserType.LaunchOptions().setHeadless(false)
         );
     }

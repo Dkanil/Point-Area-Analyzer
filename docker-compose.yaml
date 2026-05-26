@@ -48,6 +48,24 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+  functional-tests:
+    build:
+      context: ./backend
+      dockerfile: src/functionalTest/Dockerfile
+    container_name: functional-tests
+    depends_on:
+      frontend:
+        condition: service_healthy
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/studs
+      - SPRING_DATASOURCE_USERNAME=admin
+      - SPRING_DATASOURCE_PASSWORD=admin
+      - FRONTEND_BASE_URL=http://frontend:4200
+      - BACKEND_BASE_URL=http://backend:8080
+    volumes:
+      - ./backend/build/reports:/app/build/reports
+      - gradle_cache:/root/.gradle
 
 volumes:
   postgres_data:
+  gradle_cache:

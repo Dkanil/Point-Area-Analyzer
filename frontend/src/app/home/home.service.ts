@@ -7,16 +7,18 @@ import {Point} from './point';
   providedIn: 'root'
 })
 export class HomeService {
-  baseUrl = 'http://localhost:8080/home';
+  private getApiUrl(): string {
+    return window.location.hostname === 'frontend' ? 'http://backend:8080' : 'http://localhost:8080';
+  }
 
   constructor(private http: HttpClient) {
   }
 
   submit(x: number, y: number, r: number): Observable<any> {
-    return this.http.post(this.baseUrl + "/submit", {x, y, r});
+    return this.http.post(`${this.getApiUrl()}/home/submit`, {x, y, r});
   }
 
   getAllPoints(): Observable<any> {
-    return this.http.get<Point[]>(this.baseUrl + '/points');
+    return this.http.get<Point[]>(`${this.getApiUrl()}/home/points`);
   }
 }
