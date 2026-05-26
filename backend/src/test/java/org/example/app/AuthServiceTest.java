@@ -49,7 +49,7 @@ class AuthServiceTest {
         when(jwtCore.generateToken(any())).thenReturn("jwtToken");
         JwtResponse response = authService.signUp(makeRequest("newUsername"));
         ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
-        verify(userService).create(userCaptor.capture()); // fixme
+        verify(userService).create(userCaptor.capture());
         User user = userCaptor.getValue();
 
         assertEquals("jwtToken", response.getToken());
@@ -67,5 +67,4 @@ class AuthServiceTest {
         JwtResponse response = authService.signIn(authRequest);
         assertEquals("jwtToken", response.getToken());
     }
-    // todo мб надо тест где неуспешные сценарии
 }
