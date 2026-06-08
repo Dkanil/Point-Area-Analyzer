@@ -29,6 +29,7 @@ public class PointService {
     }
 
     public PointResponse processAndSavePoint(PointRequest point, String username) {
+        point.setUsername(username);
         boolean isHit = checkHit(point.getX(), point.getY(), point.getR());
         PointCords pointCords = new PointCords(
                 point.getX(),
