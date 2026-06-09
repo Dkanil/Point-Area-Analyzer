@@ -1,11 +1,13 @@
 package org.example.app.jmx;
 
+import org.springframework.jmx.export.annotation.ManagedResource;
 import org.springframework.stereotype.Component;
 
 import java.util.HashMap;
 import java.util.Map;
 
 @Component
+@ManagedResource(objectName = "MyMBeans:name=MissPercentage")
 public class MissPercentage implements MissPercentageMXBean {
     private final PointCounter pointCounter;
 
