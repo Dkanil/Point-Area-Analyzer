@@ -1,6 +1,7 @@
 package org.example.app.jmx;
 
 import org.example.app.dto.PointResponse;
+import org.springframework.jmx.export.annotation.ManagedResource;
 import org.springframework.stereotype.Component;
 import javax.management.Notification;
 import javax.management.NotificationBroadcasterSupport;
@@ -9,10 +10,13 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 
 @Component
+@ManagedResource(objectName = "MyMBeans:name=pointCounter")
 public class PointCounter extends NotificationBroadcasterSupport implements PointCounterMXBean {
     private final AtomicLong totalPoints = new AtomicLong(0);
     private final AtomicLong totalMisses = new AtomicLong(0);
     private final Map<String, UserStats> userStatsMap = new ConcurrentHashMap<>();
+
+    private final AtomicLong lastActiveUserStreak = new AtomicLong(0);
 
     private long notificationSequence = 1;
 
@@ -33,9 +37,10 @@ public class PointCounter extends NotificationBroadcasterSupport implements Poin
                 stats = new UserStats(username);
             }
             stats.registerPoint(isHit, quarter);
+            lastActiveUserStreak.set(stats.getStreakMisses());
+
             if (stats.getStreakMisses() == 3) {
                 sendNotification(username);
-                stats.dropStreakMisses();
             }
             return stats;
         });
@@ -71,5 +76,10 @@ public class PointCounter extends NotificationBroadcasterSupport implements Poin
     @Override
     public Map<String, UserStats> getUsersStats() {
         return userStatsMap;
+    }
+
+    @Override
+    public long getCurrentStreak() {
+        return lastActiveUserStreak.get();
     }
 }

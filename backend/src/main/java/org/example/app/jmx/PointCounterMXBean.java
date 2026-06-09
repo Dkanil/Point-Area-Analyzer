@@ -6,4 +6,5 @@ public interface PointCounterMXBean {
     long getTotalPoints();
     long getMissPoints();
     Map<String, UserStats> getUsersStats();
+    long getCurrentStreak();
 }
