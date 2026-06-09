@@ -1,10 +1,6 @@
 package org.example.app;
 
-import com.microsoft.playwright.Browser;
-import com.microsoft.playwright.BrowserContext;
-import com.microsoft.playwright.Locator;
-import com.microsoft.playwright.Page;
-import com.microsoft.playwright.Playwright;
+import com.microsoft.playwright.*;
 import com.microsoft.playwright.options.AriaRole;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
@@ -185,7 +181,7 @@ public class MainPageTests {
                 .setHasText("2")).first();
         assertThat(row).isVisible();
         page.reload();
-        page.waitForLoadState();
+        page.waitForSelector("table tbody tr");
         int rowsAfterReload = page.locator("table tbody tr").count();
         assertEquals(1, rowsAfterReload);
         assertThat(row).isVisible();
