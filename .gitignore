@@ -1,6 +1,7 @@
 tmp
 .gradle
 target/
+*.jfr
 .mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
 !**/src/test/**/target/

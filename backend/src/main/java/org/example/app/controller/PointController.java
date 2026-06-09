@@ -2,7 +2,6 @@ package org.example.app.controller;
 
 import org.example.app.dto.PointRequest;
 import org.example.app.dto.PointResponse;
-import org.example.app.jmx.PointCounter;
 import org.example.app.service.JwtCore;
 import org.example.app.service.PointService;
 import org.springframework.http.ResponseEntity;
@@ -14,6 +13,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import jakarta.validation.Valid;
 
+import org.example.app.jmx.PointCounter;
+import org.example.app.jmx.PointMissEvent;
+import org.example.app.jmx.PointSetEvent;
+
 import java.util.List;
 
 @RestController
@@ -22,6 +25,7 @@ public class PointController {
 
     private final PointService pointService;
     private final JwtCore jwtCore;
+
     private final PointCounter pointCounter;
 
     public PointController(PointService pointService, JwtCore jwtCore, PointCounter pointCounter) {
@@ -33,8 +37,19 @@ public class PointController {
     @PostMapping("/submit")
     public PointResponse submit(@Valid @RequestBody PointRequest point, @RequestHeader("Authorization") String authHeader) {
         String username = jwtCore.extractUsername(authHeader.replace("Bearer ", ""));
+
+        PointSetEvent setEvent = new PointSetEvent(username, point.getX(), point.getY());
+        setEvent.begin();
         PointResponse response = pointService.processAndSavePoint(point, username);
+        setEvent.end();
+        setEvent.isHit = response.getIsHit();
+        setEvent.commit();
         pointCounter.registerPoint(response);
+
+        if (!response.getIsHit()) {
+            PointMissEvent missEvent = new PointMissEvent(username, pointCounter.getCurrentStreak());
+            missEvent.commit();
+        }
         return response;
     }
 
