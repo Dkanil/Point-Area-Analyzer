@@ -29,10 +29,12 @@ public class TokenFilter extends OncePerRequestFilter {
     public static final String HEADER_NAME = "Authorization";
     private final JwtCore jwtCore;
     private final UserService userService;
+    private final AuthenticatedRequestContext authenticatedRequestContext;
 
-    public TokenFilter(JwtCore jwtCore, UserService userService) {
+    public TokenFilter(JwtCore jwtCore, UserService userService, AuthenticatedRequestContext authenticatedRequestContext) {
         this.jwtCore = jwtCore;
         this.userService = userService;
+        this.authenticatedRequestContext = authenticatedRequestContext;
     }
 
     @Override
@@ -63,6 +65,13 @@ public class TokenFilter extends OncePerRequestFilter {
                     authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                     context.setAuthentication(authToken);
                     SecurityContextHolder.setContext(context);
+
+                    authenticatedRequestContext.rememberAuthenticatedRequest(
+                            username,
+                            request.getRequestURI(),
+                            request.getRemoteAddr(),
+                            request.getHeader("User-Agent")
+                    );
                 }
             }
         } catch (ExpiredJwtException e) {
@@ -72,7 +81,10 @@ public class TokenFilter extends OncePerRequestFilter {
         } catch (Exception e) {
             logger.warn("JWT processing error: " + e.getMessage());
         }
-
-        filterChain.doFilter(request, response);
+        try {
+            filterChain.doFilter(request, response);
+        } finally {
+            authenticatedRequestContext.clear();
+        }
     }
 }
