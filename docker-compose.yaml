@@ -4,6 +4,8 @@ services:
     container_name: backend
     ports:
       - "8080:8080"
+      - "9010:9010"
+      - "9011:9011"
     depends_on:
       postgres:
         condition: service_healthy
@@ -11,6 +13,10 @@ services:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/studs
       - SPRING_DATASOURCE_USERNAME=admin
       - SPRING_DATASOURCE_PASSWORD=admin
+    env_file:
+      - ./backend/jmxRemoteConfig/jmx-secured.env
+    volumes:
+      - ./backend/jmxRemoteConfig/jmx.keystore:/jmxRemoteConfig/jmx.keystore
     healthcheck:
       test: [ "CMD", "curl", "-f", "http://localhost:8080/auth/health" ]
       interval: 5s
